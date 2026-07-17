@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KrishnaBot — AI Assistant</title>
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            width: 800px;
+            height: 90vh;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px 24px;
+        }
+
+        .header h1 { font-size: 22px; font-weight: 600; }
+        .header p { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+
+        .status {
+            display: inline-block;
+            width: 8px; height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            margin-right: 6px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 14px;
+            color: #6c757d;
+            border: none;
+            background: none;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+            background: white;
+            font-weight: 500;
+        }
+
+        .tab:hover { background: #e9ecef; }
+
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message {
+            display: flex;
+            gap: 10px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user { flex-direction: row-reverse; }
+
+        .avatar {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .avatar.ai { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .avatar.user { background: #4ade80; }
+
+        .bubble {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .bubble.ai {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-top-left-radius: 4px;
+            color: #333;
+        }
+
+        .bubble.user {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-top-right-radius: 4px;
+        }
+
+        .chunks-section {
+            margin-top: 10px;
+            padding: 10px;
+            background: #fff3cd;
+            border-radius: 8px;
+            border: 1px solid #ffc107;
+        }
+
+        .chunks-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #856404;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .chunk-item {
+            font-size: 12px;
+            color: #664d03;
+            padding: 4px 0;
+            border-bottom: 1px solid #ffd96a;
+        }
+
+        .chunk-item:last-child { border-bottom: none; }
+
+        .mode-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .mode-badge.chat { background: #e8f4fd; color: #0d6efd; }
+        .mode-badge.rag { background: #fff3cd; color: #856404; }
+
+        .typing {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-radius: 16px;
+            border-top-left-radius: 4px;
+            width: fit-content;
+        }
+
+        .typing span {
+            width: 8px; height: 8px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: typing 1s infinite;
+        }
+
+        .typing span:nth-child(2) { animation-delay: 0.2s; }
+        .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        .input-area {
+            padding: 16px 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .input-area textarea {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #e9ecef;
+            border-radius: 24px;
+            font-size: 14px;
+            resize: none;
+            outline: none;
+            max-height: 100px;
+            line-height: 1.5;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .input-area textarea:focus { border-color: #667eea; }
+
+        .send-btn {
+            width: 44px; height: 44px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+            flex-shrink: 0;
+        }
+
+        .send-btn:hover { transform: scale(1.05); }
+        .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .chat-area::-webkit-scrollbar { width: 4px; }
+        .chat-area::-webkit-scrollbar-thumb {
+            background: #dee2e6;
+            border-radius: 2px;
+        }
+        /* Error message */
+.error-bubble {
+    background: #fee2e2 !important;
+    border-color: #fca5a5 !important;
+    color: #991b1b !important;
+}
+
+/* Time taken badge */
+.time-badge {
+    font-size: 10px;
+    color: #9ca3af;
+    margin-top: 4px;
+    text-align: right;
+}
+
+/* Model badge */
+.model-info {
+    font-size: 10px;
+    color: #9ca3af;
+    margin-top: 4px;
+}
+
+/* Welcome message highlight */
+.highlight {
+    background: linear-gradient(135deg, #667eea20, #764ba220);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+/* Clear chat button */
+.clear-btn {
+    padding: 6px 14px;
+    background: none;
+    border: 1px solid #e9ecef;
+    border-radius: 20px;
+    font-size: 12px;
+    color: #6c757d;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.clear-btn:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
+    color: #991b1b;
+}
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+
+    <div class="header">
+        <h1>🤖 KrishnaBot AI Assistant</h1>
+        <p>
+            <span class="status"></span>
+            Powered by Llama AI + RAG Technology
+        </p>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active"
+                onclick="switchMode('chat')"
+                id="tab-chat">
+            💬 Normal Chat
+        </button>
+        <button class="tab"
+                onclick="switchMode('rag')"
+                id="tab-rag">
+            📄 RAG Document Search
+        </button>
+    </div>
+
+    <div class="chat-area" id="chatArea">
+        <div class="message">
+            <div class="avatar ai">🤖</div>
+            <div>
+                <div class="bubble ai">
+                    Hello! I am KrishnaBot — your AI assistant.
+                    <br><br>
+                    Use <strong>Normal Chat</strong> for
+                    general questions and
+                    <strong>RAG Search</strong> to search
+                    company documents!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="input-area">
+        <textarea
+            id="userInput"
+            placeholder="Type your message..."
+            rows="1"
+            onkeypress="handleKeyPress(event)"
+            oninput="autoResize(this)">
+        </textarea>
+        <button class="send-btn"
+                onclick="sendMessage()"
+                id="sendBtn">➤</button>
+    </div>
+
+</div>
+
+<script>
+    // ✅ Call Python FastAPI directly — port 8000
+    // Because your Python handles both chat and RAG!
+    const API_URL = 'http://localhost:8000';
+    let currentMode = 'chat';
+
+    function switchMode(mode) {
+        currentMode = mode;
+        document.getElementById('tab-chat')
+            .classList.toggle('active', mode === 'chat');
+        document.getElementById('tab-rag')
+            .classList.toggle('active', mode === 'rag');
+
+        document.getElementById('userInput').placeholder =
+            mode === 'chat'
+                ? 'Ask me anything...'
+                : 'Search company documents...';
+
+        addMessage('ai',
+            mode === 'chat'
+                ? '💬 Switched to Normal Chat!'
+                : '📄 Switched to RAG mode! Ask about company policies.'
+        );
+    }
+
+    function handleKeyPress(event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage();
+        }
+    }
+
+    function autoResize(el) {
+        el.style.height = 'auto';
+        el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+    }
+
+    function addMessage(sender, text, chunks = null) {
+        const chatArea = document.getElementById('chatArea');
+        const div = document.createElement('div');
+        div.className = `message ${sender}`;
+
+        const avatar = sender === 'ai' ? '🤖' : '👤';
+        const badge = sender === 'ai'
+            ? `<div class="mode-badge ${currentMode}">
+                ${currentMode === 'rag' ? '📄 RAG' : '💬 Chat'}
+               </div>`
+            : '';
+
+        let chunksHtml = '';
+        if (chunks && chunks.length > 0) {
+            chunksHtml = `
+                <div class="chunks-section">
+                    <div class="chunks-title">
+                        📎 Sources (${chunks.length})
+                    </div>
+                    ${chunks.map(c =>
+                        `<div class="chunk-item">${c}</div>`
+                    ).join('')}
+                </div>`;
+        }
+
+        div.innerHTML = `
+            <div class="avatar ${sender}">${avatar}</div>
+            <div>
+                ${badge}
+                <div class="bubble ${sender}">
+                    ${text}${chunksHtml}
+                </div>
+            </div>`;
+
+        chatArea.appendChild(div);
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    function showTyping() {
+        const chatArea = document.getElementById('chatArea');
+        const div = document.createElement('div');
+        div.className = 'message';
+        div.id = 'typing';
+        div.innerHTML = `
+            <div class="avatar ai">🤖</div>
+            <div class="typing">
+                <span></span><span></span><span></span>
+            </div>`;
+        chatArea.appendChild(div);
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    function hideTyping() {
+        const t = document.getElementById('typing');
+        if (t) t.remove();
+    }
+
+    async function sendMessage() {
+        const input = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const message = input.value.trim();
+        if (!message) return;
+
+        addMessage('user', message);
+        input.value = '';
+        input.style.height = 'auto';
+        sendBtn.disabled = true;
+        showTyping();
+
+        try {
+            let endpoint, body;
+
+            if (currentMode === 'chat') {
+                // ✅ Call /api/chat with "message" field
+                endpoint = `${API_URL}/api/chat`;
+                body = { message: message };
+            } else {
+                // ✅ Call /api/rag with "question" field
+                endpoint = `${API_URL}/api/rag`;
+                body = { question: message };
+            }
+
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            });
+
+            const data = await res.json();
+            console.log('API Response:', data);
+
+            hideTyping();
+
+            // ✅ data.response is correct field name
+            const text = data.response
+                || 'Sorry — no response received';
+            const chunks = data.chunks
+                && data.chunks.length > 0
+                ? data.chunks
+                : null;
+
+            addMessage('ai', text, chunks);
+
+        } catch (error) {
+            hideTyping();
+            addMessage('ai',
+                '❌ Error! Make sure Python API is running on port 8000.'
+            );
+            console.error('Error:', error);
+        }
+
+        sendBtn.disabled = false;
+        input.focus();
+    }
+    // Clear chat
+function clearChat() {
+    const chatArea = document.getElementById('chatArea');
+    chatArea.innerHTML = '';
+    addMessage('ai', 'Chat cleared! How can I help you? 😊');
+}
+
+// Copy message text
+function copyText(text) {
+    navigator.clipboard.writeText(text);
+    alert('Copied!');
+}
+
+// Show character count
+function showCharCount(el) {
+    const count = el.value.length;
+    document.getElementById('charCount').textContent =
+        count > 0 ? `${count} chars` : '';
+}
+</script>
+
+</body>
+</html>

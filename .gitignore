@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+venv/
+env/
+
+# Java / Spring Boot
+target/
+*.class
+*.jar
+*.war
+.mvn/
+!.mvn/wrapper/
+
+# Environment files
+.env
+*.env
+secrets.txt
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+*.suo
+
+# OS files
+.DS_Store
+Thumbs.db
