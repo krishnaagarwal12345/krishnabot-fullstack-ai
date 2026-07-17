@@ -1,4 +1,4 @@
-fastapi==0.115.0
+faiss-cpu
 uvicorn==0.32.0
 groq==1.5.0
 sentence-transformers==3.2.0
