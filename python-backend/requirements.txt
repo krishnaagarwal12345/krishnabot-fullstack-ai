@@ -2,6 +2,6 @@ faiss-cpu
 uvicorn==0.32.0
 groq==1.5.0
 sentence-transformers==3.2.0
-faiss-cpu==1.9.0
+faiss-cpu
 numpy==1.26.4
 pydantic==2.9.0
